@@ -78,3 +78,24 @@ And there are also ways to receive input.
                     │   .bss            │   (section for uninitialized variables)
                     └───────────────────┘
 ```
+
+### Compile the assembly file
+```
+nasm -f elf32 loader.s -o loader.o
+```
+
+### Use linker to build kernel binary
+```
+ld -T link.ld -melf_i386 loader.o -o kernel.elf
+```
+
+### Use grub to build the ISO file
+```
+mv kernel.elf iso/boot
+grub-mkrescue -o ritamOS.iso iso -d /usr/lib/grub/i386-pc
+```
+
+### Run bootable ISO in the emulator
+```
+bochs -f bochsrc.txt
+```

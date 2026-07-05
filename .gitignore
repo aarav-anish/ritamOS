@@ -1,0 +1,25 @@
+# Build artifacts
+*.o
+*.elf
+*.iso
+*.bin
+*.img
+*.map
+*.lst
+
+# Generated kernel
+iso/boot/kernel.elf
+
+# Emulator logs
+bochslog.txt
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Linux core dumps
+core
+core.*
