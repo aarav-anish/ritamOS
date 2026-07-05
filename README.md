@@ -99,3 +99,59 @@ grub-mkrescue -o ritamOS.iso iso -d /usr/lib/grub/i386-pc
 ```
 bochs -f bochsrc.txt
 ```
+
+## Setup the kernel stack
+
+### .bss
+
+- Reserve some memory in .bss (say 4KB).
+- To initialize the stack, we only need to setup the stack pointer to the beginning of the reserved region.
+- Use push instructions to push values on the stack.
+- The stack pointer then increases automatically.       *(push dword 0x00000008) (doubleword = 4 bytes)*
+- When we pop values, the stack pointer decreases automatically.        *(pop eax)*
+
+```ascii
+                          ┌───────────────────┐
+                          │                   │
+                          │                   │ 
+                          │                   │ 
+                          │                   │ 
+        esp=kernel_stack  ├───────────────────┤  kernel_stack
+                          │                   │
+                          ├───────────────────┤  kernel_stack + 4096 bytes
+                          │                   │ 
+                          │                   │ 
+                          │                   │ 
+                          └───────────────────┘
+```
+
+### Why we need the stack for function calls ?
+**_cdecl calling convention_** (Function calling convention)  
+
+```
+test_func(arg1, arg2, arg3);
+```
+> To call a function with 3 arguments (4 byte each)   
+The convention requires that we push each argument into the stack in opposite order.  
+After we push the arguments in the stack, we call the function.  
+And the call then also pushes return address on the stack and maybe some other stuff.
+
+```ascii
+          esp=kernel_stack      ┌────────────────────┐  kernel_stack
+                                │       arg3         │
+          esp=kernel_stack + 4  ├────────────────────┤
+                                │       arg2         │
+          esp=kernel_stack + 8  ├────────────────────┤
+                                │       arg1         │
+                                ├────────────────────┤
+                                │   return address   │
+                                ├────────────────────┤
+                                │   local variables  │
+                                ├────────────────────┤
+                                │                    │
+                                ├────────────────────┤
+                                │                    │
+                                ├────────────────────┤
+                                │                    │
+                                └────────────────────┘  kernel_stack + 4096 bytes
+```
