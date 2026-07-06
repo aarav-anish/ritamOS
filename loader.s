@@ -3,7 +3,7 @@ BITS 32
 ; Make the loader symbol visible to the linker
 global loader
 
-extern testfunc
+extern kernel_main
 
 MAGIC_NUMBER        equ 0x1BADB002
 FLAGS               equ 0x0
@@ -27,11 +27,7 @@ align 4
 section .text
 loader:
     mov esp, kernel_stack + KERNEL_STACK_SIZE
-    push dword 3
-    push dword 2
-    push dword 1
-    call testfunc
-    add esp, 12
+    call kernel_main
 .hang:
     jmp .hang
 

@@ -155,3 +155,26 @@ And the call then also pushes return address on the stack and maybe some other s
                                 │                    │
                                 └────────────────────┘  kernel_stack + 4096 bytes
 ```
+
+## Framebuffer
+
+Framebuffer is a memory region within the reserved section in kernal memory.  
+It is located at this fixed address and has a size of about 32 kilobytes.  
+To display something on the screen, we can write entries with a specific structure into this region.  
+
+Text-based framebuffer that can only display text.  
+The idea behind the text-based framebuffer is to divide the screen into 80 columns and 25 rows.  
+Each entry in the framebuffer fills one of these cells with a letter.  
+Each entry has a size of 2 bytes (16 bits).  
+
+```ascii
+    Example: letter X in green with a white background
+
+        ┌──────────────┐      ┌──────────────┐      ┌────────────────────────────┐
+        │  1  1  1  1  │      │  0  0  1  0  │      │  0  1  0  1    1  0  0  0  │
+        └──────────────┘      └──────────────┘      └────────────────────────────┘
+            bg color             text color                  ASCII code
+```
+
+These entries are continuously read by the hardware and transformed on the screen.  
+Pixel-mode framebuffer is more versatile.
