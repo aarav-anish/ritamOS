@@ -187,3 +187,11 @@ and Bit 7 toggles blinking. High-intensity backgrounds are impossible.
 
 These entries are continuously read by the hardware and transformed on the screen.  
 Pixel-mode framebuffer is more versatile.
+
+## Add qemu emulator
+
+### Install emulator
+> sudo apt install qemu-system
+
+### Run the emulator
+> qemu-system-i386 -cdrom ritamOS.iso
