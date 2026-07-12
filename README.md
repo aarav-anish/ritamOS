@@ -170,11 +170,20 @@ Each entry has a size of 2 bytes (16 bits).
 ```ascii
     Example: letter X in green with a white background
 
-        ┌──────────────┐      ┌──────────────┐      ┌────────────────────────────┐
-        │  1  1  1  1  │      │  0  0  1  0  │      │  0  1  0  1    1  0  0  0  │
-        └──────────────┘      └──────────────┘      └────────────────────────────┘
-            bg color             text color                  ASCII code
+        ┌─────┐      ┌───────────┐      ┌──────────────┐      ┌────────────────────────────┐
+        │  1  │      │  1  1  1  │      │  0  0  1  0  │      │  0  1  0  1    1  0  0  0  │
+        └─────┘      └───────────┘      └──────────────┘      └────────────────────────────┘
+         blink          bg color           text color                   ASCII code
 ```
+
+Depending on the mode setup, attribute bit 7 may be either the blink bit  
+or the fourth background color bit (which allows all 16 colors to be used as background colors).  
+Bit 3 is the bright bit, which turns, for example, blue into light blue.  
+For the background color, this bit is repurposed as the blink bit in Bochs.
+
+> Flickering issue in Bochs  
+Default Behavior (Blinking Enabled): Bits 0–2 determine the background color,  
+and Bit 7 toggles blinking. High-intensity backgrounds are impossible.
 
 These entries are continuously read by the hardware and transformed on the screen.  
 Pixel-mode framebuffer is more versatile.
