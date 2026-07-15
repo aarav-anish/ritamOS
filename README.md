@@ -23,6 +23,9 @@ And there are also ways to receive input.
     xorriso
     vgabios
 
+### Install the qemu emulator
+> sudo apt install qemu-system
+
 ## How to use these tools for building the kernel?  
 - The kernel or any OS is started by going through a boot process.  
 - Ater the computer is turned ON the computer jumps to specific memory location.  
@@ -95,9 +98,14 @@ mv kernel.elf iso/boot
 grub-mkrescue -o ritamOS.iso iso -d /usr/lib/grub/i386-pc
 ```
 
-### Run bootable ISO in the emulator
+### Run bootable ISO in the bochs emulator
 ```
 bochs -f bochsrc.txt
+```
+
+### Run bootable ISO in the qemu emulator
+```
+qemu-system-i386 -cdrom ritamOS.iso
 ```
 
 ## Setup the kernel stack
@@ -132,9 +140,9 @@ bochs -f bochsrc.txt
 test_func(arg1, arg2, arg3);
 ```
 > To call a function with 3 arguments (4 byte each)   
-The convention requires that we push each argument into the stack in opposite order.  
-After we push the arguments in the stack, we call the function.  
-And the call then also pushes return address on the stack and maybe some other stuff.
+  The convention requires that we push each argument into the stack in opposite order.  
+  After we push the arguments in the stack, we call the function.  
+  And the call then also pushes return address on the stack and maybe some other stuff.
 
 ```ascii
           esp=kernel_stack      ┌────────────────────┐  kernel_stack
@@ -188,10 +196,53 @@ and Bit 7 toggles blinking. High-intensity backgrounds are impossible.
 These entries are continuously read by the hardware and transformed on the screen.  
 Pixel-mode framebuffer is more versatile.
 
-## Add qemu emulator
+## Cursor and Scrolling
 
-### Install emulator
-> sudo apt install qemu-system
+To move the cursor or scroll up and down we send commands to the CRT controller.  
+The CRT controller is a chip which manages how text is rendered on the screen.  
+It has several registers to control the cursor position, the cursor shape or the display offset.  
 
-### Run the emulator
-> qemu-system-i386 -cdrom ritamOS.iso
+To access these registers we have two ports: the command port and the data port.  
+The command port takes the index of the register that we want to access.  
+The data port takes the value we want to write to that register.  
+And to do that we can use CPU's out instruction.  
+
+Suppose, if we want to move the cursor in row 2 and column 5.
+The cursor offset would be 0x00A5 (2 * 80 + 5 = 165).  
+
+The data port is only 8 bits wide and we need to write 16 bits, we have to split the value and send the high and low bytes separately.
+We first send the index of the cursor postion high byte register to the command port and then the high byte value to the data port.  
+The controller then automatically writes values to the register.
+
+> out 0x3D4, 0x0E  
+  out 0x3D5, 0x00  
+  out 0x3D4, 0x0F  
+  out 0x3D5, 0xA5  
+
+Suppose we want to scroll 3 lines, the offset would be 0x00F0 (2 * 80 = 160)
+> out 0x3D4, 0x0C  
+  out 0x3D5, 0x00  
+  out 0x3D4, 0x0D  
+  out 0x3D5, 0xA0  
+
+```ascii
+                                ┌────────────────────┐
+                                │       0x0D         │  0x3D4   Command Port
+                                └────────────────────┘
+                                ┌────────────────────┐
+                                │       0xA0         │  0x3D5   Data Port
+                                └────────────────────┘
+
+                                ┌────────────────────┐
+                                │       0x00         │  0x0E    Cursor High Byte
+                                ├────────────────────┤
+                                │       0xA5         │  0x0F    Cursor Low Byte
+                                └────────────────────┘
+
+                                ┌────────────────────┐
+                                │       0x00         │  0x0C    Scroll Offset High
+                                ├────────────────────┤
+                                │       0xA0         │  0x0D    Scroll Offset Low
+                                └────────────────────┘
+```
+

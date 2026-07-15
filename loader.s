@@ -28,6 +28,22 @@ section .text
 loader:
     mov esp, kernel_stack + KERNEL_STACK_SIZE
     call kernel_main
+
+    ; move cursor to row 2 and column 5
+    mov dx, 0x3D4
+    mov al, 0x0E
+    out dx, al
+    mov dx, 0x3D5
+    mov al, (0xA5 >> 8) & 0xFF
+    out dx, al
+
+    mov dx, 0x3D4
+    mov al, 0x0F
+    out dx, al
+    mov dx, 0x3D5
+    mov al, (0xA5 & 0xFF)
+    out dx, al
+
 .hang:
     jmp .hang
 
