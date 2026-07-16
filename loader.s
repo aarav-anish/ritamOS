@@ -44,6 +44,21 @@ loader:
     mov al, (0xA5 & 0xFF)
     out dx, al
 
+    ; scroll 2 lines
+    mov dx, 0x3D4
+    mov al, 0x0C
+    out dx, al
+    mov dx, 0x3D5
+    mov al, (0xA0 >> 8) & 0xFF
+    out dx, al
+
+    mov dx, 0x3D4
+    mov al, 0x0D
+    out dx, al
+    mov dx, 0x3D5
+    mov al, 0xA0 & 0xFF
+    out dx, al
+
 .hang:
     jmp .hang
 
