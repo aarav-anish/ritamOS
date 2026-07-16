@@ -4,6 +4,13 @@
 
 #define FRAMEBUFFER 0x000B8000
 
+#define CRTC_COMMAND_PORT 0x3D4
+#define CRTC_DATA_PORT 0x3D5
+#define CURSOR_POS_HIGH_BYTE_CMD 0x0E
+#define CURSOR_POS_LOW_BYTE_CMD 0x0F
+#define SCREEN_START_POS_HIGH_BYTE_CMD 0x0C
+#define SCREEN_START_POS_LOW_BYTE_CMD 0x0D
+
 /* Standard VGA 16-color palette (4 bit: 0-15) */
 #define COLOR_BLACK 0x00
 #define COLOR_BLUE 0x01
@@ -23,3 +30,7 @@
 #define COLOR_WHITE 0x0F
 
 void write_letter_to_framebuffer(uint8_t letter, uint16_t row, uint16_t col, uint8_t text_color, uint8_t bg_color);
+
+void move_cursor(uint16_t position);
+
+void scroll(uint16_t line);

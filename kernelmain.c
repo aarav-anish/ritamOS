@@ -10,5 +10,7 @@ int kernel_main()
             write_letter_to_framebuffer('X', i, j, COLOR_GREEN, COLOR_WHITE);
         }
     }
+    move_cursor(500);
+    scroll(4);
     return 0;
 }
