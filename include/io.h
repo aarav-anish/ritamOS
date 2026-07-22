@@ -35,4 +35,8 @@ void move_cursor(uint16_t position);
 
 void scroll(uint16_t line);
 
+void write_letter_to_screen(const char c, uint16_t pos);
+
 void write_to_screen(const char *buf, uint16_t len);
+
+void print_byte(uint8_t *pbyte, uint32_t pos);
