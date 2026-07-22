@@ -34,3 +34,5 @@ void write_letter_to_framebuffer(uint8_t letter, uint16_t row, uint16_t col, uin
 void move_cursor(uint16_t position);
 
 void scroll(uint16_t line);
+
+void write_to_screen(const char *buf, uint16_t len);
