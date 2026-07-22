@@ -40,5 +40,11 @@ runbochs: all
 runqemu: all
 	qemu-system-i386 -cdrom ritamOS.iso
 
+cleanrunbochs: clean all
+	bochs -f bochsrc.txt
+
+cleanrunqemu: clean all
+	qemu-system-i386 -cdrom ritamOS.iso
+
 clean:
 	rm -rf *.o *.d lib/*.d lib/*.o kernel.elf ritamOS.iso iso/

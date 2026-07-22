@@ -1,8 +1,10 @@
 #include "include/types.h"
 #include "include/io.h"
+#include "util_lib.h"
 
 int kernel_main()
 {
-    write_to_screen("Welcome to RitamOS!", 19);
+    char *str = "Welcome to RitamOS!";
+    write_to_screen(str, strlen(str));
     return 0;
 }
