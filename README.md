@@ -246,3 +246,23 @@ Suppose we want to scroll 3 lines, the offset would be 0x00F0 (2 * 80 = 160)
                                 └────────────────────┘
 ```
 
+The cursor styling works exactly like moving the cursor except that it uses different commands.  
+Register 0x0A controls cursor start scanline and cursor disable bit.  
+
+The layout is
+```ascii
+          Bit:  7   6   5   4   3   2   1   0
+                ┌───┬───┬───┬───────────────┐
+                │   │   │ D │ Start Scanline│
+                └───┴───┴───┴───────────────┘
+                        ↑      ↑
+                     Bit 5   Bits 4–0         
+
+          Bit 5: Cursor disable bit 
+          0 = cursor enabled
+          1 = cursor disabled 
+```
+
+Since VGA characters are typically 16 scanlines high.  
+Writing 0x0C (12) means start drawing from scanline 12. Only bottom few lines are drawn.  
+Result: A thin underline cursor.

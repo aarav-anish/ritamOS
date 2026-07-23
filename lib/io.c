@@ -66,3 +66,30 @@ void print_byte(uint8_t *pbyte, uint32_t pos)
         }
     }
 }
+
+void style_cursor(CursorStyle cstyle)
+{
+    uint8_t start;
+    switch (cstyle)
+    {
+    case (BIG):
+        outb(CRTC_COMMAND_PORT, CURSOR_STYLE_START_CMD);
+        outb(CRTC_DATA_PORT, 0x00);
+        break;
+    case (SMALL):
+        outb(CRTC_COMMAND_PORT, CURSOR_STYLE_START_CMD);
+        outb(CRTC_DATA_PORT, 0x0C);
+        break;
+    case (DISABLE):
+        outb(CRTC_COMMAND_PORT, CURSOR_STYLE_START_CMD);
+        start = inb(CRTC_DATA_PORT);
+        outb(CRTC_DATA_PORT, start | 0x20);
+        break;
+    case (ENABLE):
+        outb(CRTC_COMMAND_PORT, CURSOR_STYLE_START_CMD);
+        start = inb(CRTC_DATA_PORT);
+        outb(CRTC_DATA_PORT, start & 0xDF);
+        break;
+    default:
+    }
+}

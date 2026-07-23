@@ -10,6 +10,8 @@
 #define CURSOR_POS_LOW_BYTE_CMD 0x0F
 #define SCREEN_START_POS_HIGH_BYTE_CMD 0x0C
 #define SCREEN_START_POS_LOW_BYTE_CMD 0x0D
+#define CURSOR_STYLE_START_CMD 0x0A
+#define CURSOR_STYLE_END_CMD 0x0B
 
 /* Standard VGA 16-color palette (4 bit: 0-15) */
 #define COLOR_BLACK 0x00
@@ -29,6 +31,8 @@
 #define COLOR_LIGHTBROWN 0x0E
 #define COLOR_WHITE 0x0F
 
+typedef enum {SMALL, BIG, ENABLE, DISABLE} CursorStyle;
+
 void write_letter_to_framebuffer(uint8_t letter, uint16_t row, uint16_t col, uint8_t text_color, uint8_t bg_color);
 
 void move_cursor(uint16_t position);
@@ -40,3 +44,5 @@ void write_letter_to_screen(const char c, uint16_t pos);
 void write_to_screen(const char *buf, uint16_t len);
 
 void print_byte(uint8_t *pbyte, uint32_t pos);
+
+void style_cursor(CursorStyle cstyle);

@@ -9,6 +9,7 @@ int kernel_main()
 
     uint8_t num = 14;
     print_byte(&num, 8);
+    style_cursor(BIG);
 
     return 0;
 }
