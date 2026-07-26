@@ -309,7 +309,7 @@ and also if the whole transmission lasted for 1 second.
                 │───────────────────────────────│ 
                 ┌───┬───┬───┬───┬───┬───┬───┬───┐
                 │ 0 │ 1 │ 1 │ 0 | 1 | 0 | 1 | 1 |
-                └───┴───┴───┴───┴───┴───┴───┴───┘ 
+                └───┴───┴───┴───┴───┴───┴───┴───┘
                     ┌───────┐   ┌───┐   ┌───────┐
                  ───┘       └───┘   └───┘       └
 ```
@@ -320,7 +320,7 @@ Common baudrates: 4800, 9600, 19200, 57600, 115200.
 Setting up the serial port is quite similar to how cursor style is changed.  
 
 Constants from the base addresses of COM1 and COM2.
-This can be referenced from osdev.org
+This can be referenced from [osdev.org](https://wiki.osdev.org/Serial_Ports)
 
 ```ascii
                                 ┌────────────────────┐
@@ -369,4 +369,77 @@ To set the divisor to the controller:
 
 ```ascii
           Baudrate = 115200 / divisor
+```
+
+### UART Frame
+
+In UART, data is sent in specifically defined chunks.  These chunks are called frames.
+Each frame consists of the data that is sent and 3 or 4 additional control bits.
+
+```ascii
+                             Data Bits
+                    ┌───────────────────────────────┐
+                ┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐
+                │ 0 │ 1 │ 1 │ 0 | 1 | 1 │ 1 │ 0 | 1 | 0 | 1 | 1 |
+                └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘ 
+                  |                                   |   |   |
+                Start Bit                             |  Stop Bits
+                                                      |
+                                                 Parity Bit
+                                 
+                                 Control Bits
+```
+Depending on the config, the data is between 5 to 9 bits long.  
+The remaining config bits are a start bit that signals the receiver by a falling edge, that the data is coming in.  
+A stop bit that signals the end of the frame. Depending on the config there can also be two stop bits.  
+And finally an optional parity bit that serves as a kind of simple checksum.
+
+We choose a very common frame layout 8N1. It has 8 data bits, one start bit, one stop bit and no parity.  
+8N1 is by far the most common serial format and is the default used by most operating systems, bootloaders, terminal emulators, and UART debugging output.  
+To configure this, line control register needs to be set to a specific binary value of 00000011 (0x03).  
+Refer to [Baud_Rate](https://wiki.osdev.org/Serial_Ports#Baud_Rate) for calculation.
+
+**Line Control Register:**  
+The Line Control register sets the general connection parameters.
+
+| Bit 7   | Bit 6            | Bit 5-3     |  Bit 2    |  Bit 1-0  |
+|:-------:|:----------------:|:-----------:|:---------:|:---------:|
+| DLAB    | Break Enable Bit | Pairty Bits | Stop Bits | Data Bits |
+
+So 00000011 (0x03) sets:  
+Bit 1-0 = 1     Character length is 8 bits  
+Bit 2   = 1     Use 1 Stop Bit  
+Bit 5-3 = 0     Parity is disabled  
+Bit 7   = 0     The Divisor Latch Access Bit (DLAB) is cleared.
+
+**FIFO Control Register:**  
+This register is for controlling FIFO buffer.
+
+| Bit 7-6                 | Bit 5-4  | Bit 3    |  Bit 2              |  Bit 1             | Bit 0       |
+|:-----------------------:|:--------:|:--------:|:-------------------:|:------------------:|:-----------:|
+| Interrupt Trigger Level | Reserved | DMA Mode | Clear Transmit FIFO | Clear Receive FIFO | Enable FIFO |
+
+So 11000111 (0xC7) sets:
+Bit 0    = 1    Enable FIFO  
+Bit 1    = 1    Clear receive (Rx) FIFO  
+Bit 2    = 1    Clear transmit (Tx) FIFO  
+Bits 7-6 = 11   Interrupt when FIFO has 14 bytes
+
+**Modem Control Register:**  
+
+| Bit 4                     | Bit 3               | Bit 2 | Bit 1 |  Bit 0        |
+|:-------------------------:|:-------------------:|:-----:|:-----:|:-------------:|
+| DTR (Data Terminal Ready) | RTS (Ready to Send) | OUT1  | OUT2  | Loopback Mode |
+
+So 00000011 (0x03) means:  
+DTR = ON
+RTS = ON
+
+These are classic RS-232 modem control signals.
+```ascii
+Computer ---------------- Modem
+
+DTR ---> "I'm powered on"
+RTS ---> "I'm ready to transmit"
+CTS <--- "Go ahead"
 ```

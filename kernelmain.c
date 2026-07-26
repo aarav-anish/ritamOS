@@ -78,5 +78,14 @@ int kernel_main()
     outb(SERIAL_DATA_PORT(COM1_BASE_ADDR), divisor & 0xFF);            // send least significant byte of divisor
     outb(SERIAL_DATA_PORT(COM1_BASE_ADDR) + 1, (divisor >> 8) & 0xFF); // send most significant byte of divisor
 
+    // configure line
+    outb(SERIAL_LINE_CMD_PORT(COM1_BASE_ADDR), 0x03);
+
+    // configure FIFO
+    outb(SERIAL_FIFO_CMD_PORT(COM1_BASE_ADDR), 0xC7);
+
+    // configure modem
+    outb(SERIAL_MODEM_CMD_PORT(COM1_BASE_ADDR), 0x03);
+
     return 0;
 }
