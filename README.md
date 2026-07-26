@@ -350,3 +350,23 @@ This can be referenced from osdev.org
 ```
 
 All of these above registers can be used to control different aspects of the serial connection.
+
+### Disable Interrupts
+
+Enabling interrupts would mean that UART controller interrupts the CPU each time when its buffer is full.  
+Since interrupt handling is not implemented yet, we can use polling approach.  
+We have to proactively ask UART controller about its state.  
+To deactivate interrupts, Interrupt enable register needs to be set as 0.
+
+### Set Baud Rate
+
+We do not set the baud rate itself but the divisor of the controller.  
+To set the divisor to the controller:
+- Set the most significant bit of the Line Control Register. This is the DLAB bit, and allows access to the divisor registers (data register and interrupt register).
+- Send the least significant byte of the divisor value to [PORT + 0], i.e. data register.
+- Send the most significant byte of the divisor value to [PORT + 1], i.e. interrupt register.
+- Clear the most significant bit of the Line Control Register.
+
+```ascii
+          Baudrate = 115200 / divisor
+```

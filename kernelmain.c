@@ -1,6 +1,7 @@
 #include "include/types.h"
 #include "include/io.h"
 #include "util_lib.h"
+#include "serial.h"
 
 #define DELAY_SHORT 4000000U
 #define DELAY_MEDIUM 30000000U
@@ -67,6 +68,15 @@ int kernel_main()
     const char *subtitle = "* * *";
 
     print_message(message, subtitle);
+
+    // disable interrupts
+    outb(SERIAL_INTERRUPT_PORT(COM1_BASE_ADDR), 0x00);
+
+    // set baudrate
+    uint16_t divisor;
+    outb(SERIAL_LINE_CMD_PORT(COM1_BASE_ADDR), 0x80);                  // DLAB to 1
+    outb(SERIAL_DATA_PORT(COM1_BASE_ADDR), divisor & 0xFF);            // send least significant byte of divisor
+    outb(SERIAL_DATA_PORT(COM1_BASE_ADDR) + 1, (divisor >> 8) & 0xFF); // send most significant byte of divisor
 
     return 0;
 }
