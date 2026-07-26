@@ -34,12 +34,8 @@ void draw_letter(const char *str, uint16_t row, uint16_t col, uint8_t foreground
     }
 }
 
-int kernel_main()
+void print_message(const char *message, const char *subtitle)
 {
-    style_cursor(DISABLE);
-
-    const char *message = "[ Welcome to RitamOS! ]";
-    const char *subtitle = "* * *";
     const uint16_t msg_len = strlen(message);
     const uint16_t sub_len = strlen(subtitle);
 
@@ -61,6 +57,16 @@ int kernel_main()
 
     draw_border(msg_row + 3, COLOR_GREEN);
     wait(DELAY_LONG);
+}
+
+int kernel_main()
+{
+    style_cursor(DISABLE);
+
+    const char *message = "[ Welcome to RitamOS! ]";
+    const char *subtitle = "* * *";
+
+    print_message(message, subtitle);
 
     return 0;
 }

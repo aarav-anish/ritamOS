@@ -266,3 +266,87 @@ The layout is
 Since VGA characters are typically 16 scanlines high.  
 Writing 0x0C (12) means start drawing from scanline 12. Only bottom few lines are drawn.  
 Result: A thin underline cursor.
+
+## Serial Communication
+
+At the most basic level, serial communication is a way to transfer data from one location to another.  
+Data is sent from a Transmitter (Tx) and it is received by a Receiver (Rx).  
+The transmitter and the receiver is connected by a line.  
+Sending data means applying a voltage on the transmitter side for a given amount of time and then measuring them on the reciver side.  
+
+The word serial in serial communication means that we send each bit separately.  
+If we send a byte (8 bits), we send it in a series over one line.  
+Serial communication is not the only way of transferring data from A to B.  
+In parallel communication, we send all the bits of a byte simultaneously.  
+
+### UART
+
+UART provides rules on how to communicate.  
+To send data, we apply high voltage over some time and low voltage over some time.  
+
+```ascii
+        High voltage means 1
+        Low voltage means 0
+
+                  0     1     0   1   0     1 
+                    ┌───────┐   ┌───┐   ┌────────┐
+                 ───┘       └───┘   └───┘        └
+```
+
+Each high voltage or low voltage could contain several data points.  
+A fixed period of time is decided that tells us how long a signal has to last to count as a single data point.  
+
+In UART this time length is defined as baudrate.  
+Baudrate is defined as number of symbols (data points) transmitted in one second.  
+
+> Baudrate = Symbols / Second
+
+```ascii
+If baudrate = 8 Bd (8 signals per second)
+and also if the whole transmission lasted for 1 second.
+
+                            1 second
+                │───────────────────────────────│ 
+                ┌───┬───┬───┬───┬───┬───┬───┬───┐
+                │ 0 │ 1 │ 1 │ 0 | 1 | 0 | 1 | 1 |
+                └───┴───┴───┴───┴───┴───┴───┴───┘ 
+                    ┌───────┐   ┌───┐   ┌───────┐
+                 ───┘       └───┘   └───┘       └
+```
+
+The baudrate should be same for the sender (Tx) and the receiver (Rx).  
+Common baudrates: 4800, 9600, 19200, 57600, 115200.
+
+Setting up the serial port is quite similar to how cursor style is changed.  
+
+Constants from the base addresses of COM1 and COM2.
+This can be referenced from osdev.org
+
+```ascii
+                                ┌────────────────────┐
+                        0x3F8   │       COM1         │
+                                ├────────────────────┤
+                        0x2F8   │       COM2         │
+                                └────────────────────┘
+
+          Explicit addresses for COM1:
+                                ┌───────────────────────────┐
+                        0x3F8   │ Receive/ Transmit Buffer  │
+                                ├───────────────────────────┤
+                        0x3F9   │ Interrupt Enable Register │
+                                ├───────────────────────────┤
+                        0x3FA   │ FIFO Control Register     │
+                                ├───────────────────────────┤
+                        0x3FB   │ Line Control Register     │
+                                ├───────────────────────────┤
+                        0x3FC   │ Modem Control Register    │
+                                ├───────────────────────────┤
+                        0x3FD   │ Line Status Register      │
+                                ├───────────────────────────┤
+                        0x3FE   │ Modem Status Register     │
+                                ├───────────────────────────┤
+                        0x3FF   │ Scratch Register          │
+                                └───────────────────────────┘
+```
+
+All of these above registers can be used to control different aspects of the serial connection.
