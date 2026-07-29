@@ -121,15 +121,15 @@ qemu-system-i386 -cdrom ritamOS.iso
 ```ascii
                           ┌───────────────────┐
                           │                   │
-                          │                   │ 
-                          │                   │ 
-                          │                   │ 
+                          │                   │
+                          │                   │
+                          │                   │
         esp=kernel_stack  ├───────────────────┤  kernel_stack
                           │                   │
                           ├───────────────────┤  kernel_stack + 4096 bytes
-                          │                   │ 
-                          │                   │ 
-                          │                   │ 
+                          │                   │
+                          │                   │
+                          │                   │
                           └───────────────────┘
 ```
 
@@ -256,7 +256,7 @@ The layout is
                 │   │   │ D │ Start Scanline│
                 └───┴───┴───┴───────────────┘
                         ↑      ↑
-                     Bit 5   Bits 4–0         
+                     Bit 5   Bits 4–0
 
           Bit 5: Cursor disable bit 
           0 = cursor enabled
@@ -282,13 +282,34 @@ In parallel communication, we send all the bits of a byte simultaneously.
 ### UART
 
 UART provides rules on how to communicate.  
+
+### 
+```ascii
+        UART Connection:
+            ┌───────────────────┐                             ┌───────────────────┐
+            │     Device 1      │                             │     Device 2      │
+            │                   │                             │                   │
+            │                   │                             │                   │
+            │       Receiver Rx ├─────────────────────────────┤ Receiver Rx       │
+            │                   │                             │                   │
+            │               GND ├─────────────────────────────┤ GND               │
+            │                   │                             │                   │
+            │       Transmitter ├─────────────────────────────┤ Transmitter       │
+            │                   │                             │                   │
+            │                   │                             │                   │
+            │               VCC ├────                     ────┤ VCC               │
+            └───────────────────┘                             └───────────────────┘
+        GND - Both lines share a common ground. This serves as a way to provide a voltage reference point so that the signal levels can be interpreted correctly.  
+        VCC - It carries a supply voltage which if used wrong, can fry the device.
+```
+
 To send data, we apply high voltage over some time and low voltage over some time.  
 
 ```ascii
         High voltage means 1
         Low voltage means 0
 
-                  0     1     0   1   0     1 
+                  0     1     0   1   0     1
                     ┌───────┐   ┌───┐   ┌────────┐
                  ───┘       └───┘   └───┘        └
 ```
@@ -306,7 +327,7 @@ If baudrate = 8 Bd (8 signals per second)
 and also if the whole transmission lasted for 1 second.
 
                             1 second
-                │───────────────────────────────│ 
+                │───────────────────────────────│
                 ┌───┬───┬───┬───┬───┬───┬───┬───┐
                 │ 0 │ 1 │ 1 │ 0 | 1 | 0 | 1 | 1 |
                 └───┴───┴───┴───┴───┴───┴───┴───┘
@@ -373,7 +394,7 @@ To set the divisor to the controller:
 
 ### UART Frame
 
-In UART, data is sent in specifically defined chunks.  These chunks are called frames.
+In UART, data is sent in specifically defined chunks.  These chunks are called frames.  
 Each frame consists of the data that is sent and 3 or 4 additional control bits.
 
 ```ascii
@@ -381,7 +402,7 @@ Each frame consists of the data that is sent and 3 or 4 additional control bits.
                     ┌───────────────────────────────┐
                 ┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐
                 │ 0 │ 1 │ 1 │ 0 | 1 | 1 │ 1 │ 0 | 1 | 0 | 1 | 1 |
-                └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘ 
+                └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘
                   |                                   |   |   |
                 Start Bit                             |  Stop Bits
                                                       |
@@ -407,10 +428,12 @@ The Line Control register sets the general connection parameters.
 | DLAB    | Break Enable Bit | Pairty Bits | Stop Bits | Data Bits |
 
 So 00000011 (0x03) sets:  
+```ascii
 Bit 1-0 = 1     Character length is 8 bits  
 Bit 2   = 1     Use 1 Stop Bit  
 Bit 5-3 = 0     Parity is disabled  
 Bit 7   = 0     The Divisor Latch Access Bit (DLAB) is cleared.
+```
 
 **FIFO Control Register:**  
 This register is for controlling FIFO buffer.
@@ -420,10 +443,12 @@ This register is for controlling FIFO buffer.
 | Interrupt Trigger Level | Reserved | DMA Mode | Clear Transmit FIFO | Clear Receive FIFO | Enable FIFO |
 
 So 11000111 (0xC7) sets:
+```ascii
 Bit 0    = 1    Enable FIFO  
 Bit 1    = 1    Clear receive (Rx) FIFO  
 Bit 2    = 1    Clear transmit (Tx) FIFO  
 Bits 7-6 = 11   Interrupt when FIFO has 14 bytes
+```
 
 **Modem Control Register:**  
 
@@ -432,8 +457,10 @@ Bits 7-6 = 11   Interrupt when FIFO has 14 bytes
 | DTR (Data Terminal Ready) | RTS (Ready to Send) | OUT1  | OUT2  | Loopback Mode |
 
 So 00000011 (0x03) means:  
+```ascii
 DTR = ON
 RTS = ON
+```
 
 These are classic RS-232 modem control signals.
 ```ascii
@@ -443,3 +470,10 @@ DTR ---> "I'm powered on"
 RTS ---> "I'm ready to transmit"
 CTS <--- "Go ahead"
 ```
+
+**Line status register:**  
+To output something, we first have to ask if the connection is ready to send.  
+Line status register is used to do it. This register contains various pieces of information about connection status.  
+To get this status, we have to use the inb instruction to filter out bit 5.  
+Bit 5 is called THRE (Transmit Holding Register Empty). It tells whether the transmission buffer is empty.  
+If bit 5 = 1, it means that the UART is ready to accept another byte.

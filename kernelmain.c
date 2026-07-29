@@ -1,5 +1,6 @@
-#include "include/types.h"
-#include "include/io.h"
+#include "types.h"
+#include "io.h"
+#include "asm.h"
 #include "util_lib.h"
 #include "serial.h"
 
@@ -62,30 +63,19 @@ void print_message(const char *message, const char *subtitle)
 
 int kernel_main()
 {
-    style_cursor(DISABLE);
+    // style_cursor(DISABLE);
 
-    const char *message = "[ Welcome to RitamOS! ]";
-    const char *subtitle = "* * *";
+    // const char *message = "[ Welcome to RitamOS! ]";
+    // const char *subtitle = "* * *";
 
-    print_message(message, subtitle);
+    // print_message(message, subtitle);
 
-    // disable interrupts
-    outb(SERIAL_INTERRUPT_PORT(COM1_BASE_ADDR), 0x00);
+    setup_serial(COM1_BASE_ADDR);
 
-    // set baudrate
-    uint16_t divisor;
-    outb(SERIAL_LINE_CMD_PORT(COM1_BASE_ADDR), 0x80);                  // DLAB to 1
-    outb(SERIAL_DATA_PORT(COM1_BASE_ADDR), divisor & 0xFF);            // send least significant byte of divisor
-    outb(SERIAL_DATA_PORT(COM1_BASE_ADDR) + 1, (divisor >> 8) & 0xFF); // send most significant byte of divisor
-
-    // configure line
-    outb(SERIAL_LINE_CMD_PORT(COM1_BASE_ADDR), 0x03);
-
-    // configure FIFO
-    outb(SERIAL_FIFO_CMD_PORT(COM1_BASE_ADDR), 0xC7);
-
-    // configure modem
-    outb(SERIAL_MODEM_CMD_PORT(COM1_BASE_ADDR), 0x03);
+    if ((inb(SERIAL_LINE_STATUS_PORT(COM1_BASE_ADDR)) & 0x20) == 0x20)
+    {
+        outb(SERIAL_DATA_PORT(COM1_BASE_ADDR), 'A');
+    }
 
     return 0;
 }

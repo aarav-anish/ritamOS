@@ -10,3 +10,5 @@
 #define SERIAL_MODEM_CMD_PORT(base_addr) (base_addr + 4)
 #define SERIAL_LINE_STATUS_PORT(base_addr) (base_addr + 5)
 #define SERIAL_MODEM_STATUS_PORT(base_addr) (base_addr + 6)
+
+void setup_serial(uint16_t com);
