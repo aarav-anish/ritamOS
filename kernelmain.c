@@ -65,17 +65,14 @@ int kernel_main()
 {
     // style_cursor(DISABLE);
 
-    // const char *message = "[ Welcome to RitamOS! ]";
+    const char *message = "[ Welcome to RitamOS! ]";
     // const char *subtitle = "* * *";
 
     // print_message(message, subtitle);
 
     setup_serial(COM1_BASE_ADDR);
 
-    if ((inb(SERIAL_LINE_STATUS_PORT(COM1_BASE_ADDR)) & 0x20) == 0x20)
-    {
-        outb(SERIAL_DATA_PORT(COM1_BASE_ADDR), 'A');
-    }
+    serial_write_string(COM1_BASE_ADDR, message, strlen(message));
 
     return 0;
 }

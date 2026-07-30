@@ -290,16 +290,18 @@ UART provides rules on how to communicate.
             │     Device 1      │                             │     Device 2      │
             │                   │                             │                   │
             │                   │                             │                   │
-            │       Receiver Rx ├─────────────────────────────┤ Receiver Rx       │
+            │  Transmitter (Tx) ├─────────────────────────────┤ Receiver (Rx)     │
             │                   │                             │                   │
             │               GND ├─────────────────────────────┤ GND               │
             │                   │                             │                   │
-            │       Transmitter ├─────────────────────────────┤ Transmitter       │
+            │     Receiver (Rx) ├─────────────────────────────┤ Transmitter (Tx)  │
             │                   │                             │                   │
             │                   │                             │                   │
             │               VCC ├────                     ────┤ VCC               │
             └───────────────────┘                             └───────────────────┘
-        GND - Both lines share a common ground. This serves as a way to provide a voltage reference point so that the signal levels can be interpreted correctly.  
+        GND - Both lines share a common ground. 
+              This serves as a way to provide a voltage reference point 
+              so that the signal levels can be interpreted correctly.  
         VCC - It carries a supply voltage which if used wrong, can fry the device.
 ```
 
