@@ -28,6 +28,11 @@ int8_t is_transit_buffer_empty(uint16_t com)
     return (inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20) == 0x20;
 }
 
+int8_t is_data_read(uint16_t com)
+{
+    return (inb(SERIAL_LINE_STATUS_PORT(com)) & 0x01) == 0x01;
+}
+
 void serial_write(uint16_t com, uint8_t data)
 {
     while (!is_transit_buffer_empty(com))
@@ -42,4 +47,12 @@ void serial_write_string(uint16_t com, const char *buf, uint32_t len)
     {
         serial_write(com, buf[i]);
     }
+}
+
+char serial_read(uint16_t com)
+{
+    while (!is_data_read(com))
+    {
+    }
+    return inb(SERIAL_DATA_PORT(com));
 }

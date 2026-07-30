@@ -15,6 +15,10 @@ void setup_serial(uint16_t com);
 
 int8_t is_transit_buffer_empty(uint16_t com);
 
+int8_t is_data_read(uint16_t com);
+
 void serial_write(uint16_t com, uint8_t data);
 
 void serial_write_string(uint16_t com, const char *buf, uint32_t len);
+
+char serial_read(uint16_t com);

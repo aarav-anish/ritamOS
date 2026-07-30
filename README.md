@@ -474,8 +474,14 @@ CTS <--- "Go ahead"
 ```
 
 **Line status register:**  
-To output something, we first have to ask if the connection is ready to send.  
+To output something, we first have to ask if the connection is ready to send data.  
 Line status register is used to do it. This register contains various pieces of information about connection status.  
 To get this status, we have to use the inb instruction to filter out bit 5.  
 Bit 5 is called THRE (Transmit Holding Register Empty). It tells whether the transmission buffer is empty.  
 If bit 5 = 1, it means that the UART is ready to accept another byte.
+
+To send data from another machine to the kernel, we first check whether the connection is ready to read data.  
+Bit 1 is called DR (Data Ready). It tells that a byte is waiting in the receive buffer.  
+Reading this register does two things:  
+- Returns the received byte.  
+- Removes it from the UART's receive buffer.
