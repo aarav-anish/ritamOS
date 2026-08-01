@@ -33,10 +33,9 @@ And there are also ways to receive input.
 - The BIOS runs some tests and looks for a bootloader and transfers control to it.  
 - And the bootloader then looks for our kernel, loads it into memory and jumps to its entry point.  
 
-```ascii
-        ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-        │      BIOS       │─────>│   Bootloader    │─────>│     Kernel      │
-        └─────────────────┘      └─────────────────┘      └─────────────────┘
+```mermaid
+flowchart LR
+    A["BIOS"] --> B["Bootloader"] --> C["Kernel"]
 ```
 
 - To run a kernel we have to provide a bootloader and a kernel binary.  
@@ -44,43 +43,13 @@ And there are also ways to receive input.
 - After that we can use the emulator to boot from this ISO file.  
 - Our installed emulator is Bochs.  
 
-```ascii
-┌──────────────────────────────────────────────────────┐
-│                                                      │
-│                       Bochs                          │
-│                                                      │
-│    ┌────────────────────────────────────────────┐    │
-│    │                                            │    │
-│    │  ┌─────────────────┐  ┌─────────────────┐  │    │
-│    │  │      GRUB       │  │      Kernel     │  │    │
-│    │  └─────────────────┘  └─────────────────┘  │    │
-│    │                                            │    │
-│    │                  OS.iso                    │    │
-│    │                                            │    │
-│    └────────────────────────────────────────────┘    │
-│                                                      │
-└──────────────────────────────────────────────────────┘
-```
+![Bochs Environment](docs/images/bochs-environment.svg)
 
 ## Memory layout of the kernel binary
 
 ### kernel.elf
 
-```ascii
-        0x00000000  ┌───────────────────┐
-                    │   Reserved        │   (reserved space for CPU's personal workspace)
-        0x00100000  ├───────────────────┤
-                    │   .multiboot      │   (in this header our kernel tells grub how to start it)
-        0x00101000  ├───────────────────┤
-                    │   .text           │   (actual kernel code goes here)
-        0x00105000  ├───────────────────┤
-                    │   .rodata         │   (read only data: usually for string constants and stuff)
-        0x0010A000  ├───────────────────┤
-                    │   .data           │   (section for initialized variables)
-        0x00210000  ├───────────────────┤
-                    │   .bss            │   (section for uninitialized variables)
-                    └───────────────────┘
-```
+![Memory Layout](docs/images/memory-layout.svg)
 
 ### Compile the assembly file
 ```
@@ -118,20 +87,7 @@ qemu-system-i386 -cdrom ritamOS.iso
 - The stack pointer then increases automatically.       *(push dword 0x00000008) (doubleword = 4 bytes)*
 - When we pop values, the stack pointer decreases automatically.        *(pop eax)*
 
-```ascii
-                          ┌───────────────────┐
-                          │                   │
-                          │                   │
-                          │                   │
-                          │                   │
-        esp=kernel_stack  ├───────────────────┤  kernel_stack
-                          │                   │
-                          ├───────────────────┤  kernel_stack + 4096 bytes
-                          │                   │
-                          │                   │
-                          │                   │
-                          └───────────────────┘
-```
+![Kernel Stack Region](docs/images/kernel-stack-region.svg)
 
 ### Why we need the stack for function calls ?
 **_cdecl calling convention_** (Function calling convention)  
@@ -144,25 +100,7 @@ test_func(arg1, arg2, arg3);
   After we push the arguments in the stack, we call the function.  
   And the call then also pushes return address on the stack and maybe some other stuff.
 
-```ascii
-          esp=kernel_stack      ┌────────────────────┐  kernel_stack
-                                │       arg3         │
-          esp=kernel_stack + 4  ├────────────────────┤
-                                │       arg2         │
-          esp=kernel_stack + 8  ├────────────────────┤
-                                │       arg1         │
-                                ├────────────────────┤
-                                │   return address   │
-                                ├────────────────────┤
-                                │   local variables  │
-                                ├────────────────────┤
-                                │                    │
-                                ├────────────────────┤
-                                │                    │
-                                ├────────────────────┤
-                                │                    │
-                                └────────────────────┘  kernel_stack + 4096 bytes
-```
+![Kernal Stack Layout](docs/images/kernal-stack-layout.svg)
 
 ## Framebuffer
 
@@ -175,14 +113,9 @@ The idea behind the text-based framebuffer is to divide the screen into 80 colum
 Each entry in the framebuffer fills one of these cells with a letter.  
 Each entry has a size of 2 bytes (16 bits).  
 
-```ascii
-    Example: letter X in green with a white background
+Example: letter 'X' in green with a white background
 
-        ┌─────┐      ┌───────────┐      ┌──────────────┐      ┌────────────────────────────┐
-        │  1  │      │  1  1  1  │      │  0  0  1  0  │      │  0  1  0  1    1  0  0  0  │
-        └─────┘      └───────────┘      └──────────────┘      └────────────────────────────┘
-         blink          bg color           text color                   ASCII code
-```
+![VGA Text Layout](docs/images/vga-text-layout.svg)
 
 Depending on the mode setup, attribute bit 7 may be either the blink bit  
 or the fourth background color bit (which allows all 16 colors to be used as background colors).  
@@ -225,43 +158,18 @@ Suppose we want to scroll 3 lines, the offset would be 0x00F0 (2 * 80 = 160)
   out 0x3D4, 0x0D  
   out 0x3D5, 0xA0  
 
-```ascii
-                                ┌────────────────────┐
-                                │       0x0D         │  0x3D4   Command Port
-                                └────────────────────┘
-                                ┌────────────────────┐
-                                │       0xA0         │  0x3D5   Data Port
-                                └────────────────────┘
-
-                                ┌────────────────────┐
-                                │       0x00         │  0x0E    Cursor High Byte
-                                ├────────────────────┤
-                                │       0xA5         │  0x0F    Cursor Low Byte
-                                └────────────────────┘
-
-                                ┌────────────────────┐
-                                │       0x00         │  0x0C    Scroll Offset High
-                                ├────────────────────┤
-                                │       0xA0         │  0x0D    Scroll Offset Low
-                                └────────────────────┘
-```
+![CRT Controller Registers](docs/images/crt-controller-registers.svg)
 
 The cursor styling works exactly like moving the cursor except that it uses different commands.  
 Register 0x0A controls cursor start scanline and cursor disable bit.  
 
-The layout is
-```ascii
-          Bit:  7   6   5   4   3   2   1   0
-                ┌───┬───┬───┬───────────────┐
-                │   │   │ D │ Start Scanline│
-                └───┴───┴───┴───────────────┘
-                        ↑      ↑
-                     Bit 5   Bits 4–0
+The layout is:
 
-          Bit 5: Cursor disable bit 
-          0 = cursor enabled
-          1 = cursor disabled 
-```
+![Cursor Start Register](docs/images/cursor-start-register.svg)
+
+> Bit 5: Cursor disable bit  
+    0 = cursor enabled  
+    1 = cursor disabled
 
 Since VGA characters are typically 16 scanlines high.  
 Writing 0x0C (12) means start drawing from scanline 12. Only bottom few lines are drawn.  
@@ -283,38 +191,19 @@ In parallel communication, we send all the bits of a byte simultaneously.
 
 UART provides rules on how to communicate.  
 
-### 
-```ascii
-        UART Connection:
-            ┌───────────────────┐                             ┌───────────────────┐
-            │     Device 1      │                             │     Device 2      │
-            │                   │                             │                   │
-            │                   │                             │                   │
-            │  Transmitter (Tx) ├─────────────────────────────┤ Receiver (Rx)     │
-            │                   │                             │                   │
-            │               GND ├─────────────────────────────┤ GND               │
-            │                   │                             │                   │
-            │     Receiver (Rx) ├─────────────────────────────┤ Transmitter (Tx)  │
-            │                   │                             │                   │
-            │                   │                             │                   │
-            │               VCC ├────                     ────┤ VCC               │
-            └───────────────────┘                             └───────────────────┘
-        GND - Both lines share a common ground. 
-              This serves as a way to provide a voltage reference point 
-              so that the signal levels can be interpreted correctly.  
-        VCC - It carries a supply voltage which if used wrong, can fry the device.
-```
+UART Connection:
+
+![UART Connection](docs/images/uart-connection.svg)
+
+GND - Both lines share a common ground. This serves as a way to provide a voltage reference point so that the signal levels can be interpreted correctly.  
+VCC - It carries a supply voltage which if used wrong, can fry the device.
 
 To send data, we apply high voltage over some time and low voltage over some time.  
 
-```ascii
-        High voltage means 1
-        Low voltage means 0
+High voltage means 1  
+Low voltage means 0
 
-                  0     1     0   1   0     1
-                    ┌───────┐   ┌───┐   ┌────────┐
-                 ───┘       └───┘   └───┘        └
-```
+![Digital Signal Waveform](docs/images/digital-signal-waveform.svg)
 
 Each high voltage or low voltage could contain several data points.  
 A fixed period of time is decided that tells us how long a signal has to last to count as a single data point.  
@@ -324,18 +213,10 @@ Baudrate is defined as number of symbols (data points) transmitted in one second
 
 > Baudrate = Symbols / Second
 
-```ascii
-If baudrate = 8 Bd (8 signals per second)
+If baudrate = 8 Bd (8 signals per second)  
 and also if the whole transmission lasted for 1 second.
 
-                            1 second
-                │───────────────────────────────│
-                ┌───┬───┬───┬───┬───┬───┬───┬───┐
-                │ 0 │ 1 │ 1 │ 0 | 1 | 0 | 1 | 1 |
-                └───┴───┴───┴───┴───┴───┴───┴───┘
-                    ┌───────┐   ┌───┐   ┌───────┐
-                 ───┘       └───┘   └───┘       └
-```
+![Baud Rate Illustration](docs/images/baud-rate-illustration.svg)
 
 The baudrate should be same for the sender (Tx) and the receiver (Rx).  
 Common baudrates: 4800, 9600, 19200, 57600, 115200.
@@ -345,32 +226,23 @@ Setting up the serial port is quite similar to how cursor style is changed.
 Constants from the base addresses of COM1 and COM2.
 This can be referenced from [osdev.org](https://wiki.osdev.org/Serial_Ports)
 
-```ascii
-                                ┌────────────────────┐
-                        0x3F8   │       COM1         │
-                                ├────────────────────┤
-                        0x2F8   │       COM2         │
-                                └────────────────────┘
+| Base Address | Serial Port |
+|--------------|-------------|
+| `0x3F8` | COM1 |
+| `0x2F8` | COM2 |
 
-          Explicit addresses for COM1:
-                                ┌───────────────────────────┐
-                        0x3F8   │ Receive/ Transmit Buffer  │
-                                ├───────────────────────────┤
-                        0x3F9   │ Interrupt Enable Register │
-                                ├───────────────────────────┤
-                        0x3FA   │ FIFO Control Register     │
-                                ├───────────────────────────┤
-                        0x3FB   │ Line Control Register     │
-                                ├───────────────────────────┤
-                        0x3FC   │ Modem Control Register    │
-                                ├───────────────────────────┤
-                        0x3FD   │ Line Status Register      │
-                                ├───────────────────────────┤
-                        0x3FE   │ Modem Status Register     │
-                                ├───────────────────────────┤
-                        0x3FF   │ Scratch Register          │
-                                └───────────────────────────┘
-```
+Explicit addresses for COM1:
+
+| I/O Port | Register |
+|---------|----------|
+| `0x3F8` | Receive / Transmit Buffer |
+| `0x3F9` | Interrupt Enable Register |
+| `0x3FA` | FIFO Control Register |
+| `0x3FB` | Line Control Register |
+| `0x3FC` | Modem Control Register |
+| `0x3FD` | Line Status Register |
+| `0x3FE` | Modem Status Register |
+| `0x3FF` | Scratch Register |
 
 All of these above registers can be used to control different aspects of the serial connection.
 
@@ -391,7 +263,7 @@ To set the divisor to the controller:
 - Clear the most significant bit of the Line Control Register.
 
 ```ascii
-          Baudrate = 115200 / divisor
+    Baudrate = 115200 / divisor
 ```
 
 ### UART Frame
@@ -399,19 +271,8 @@ To set the divisor to the controller:
 In UART, data is sent in specifically defined chunks.  These chunks are called frames.  
 Each frame consists of the data that is sent and 3 or 4 additional control bits.
 
-```ascii
-                             Data Bits
-                    ┌───────────────────────────────┐
-                ┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐
-                │ 0 │ 1 │ 1 │ 0 | 1 | 1 │ 1 │ 0 | 1 | 0 | 1 | 1 |
-                └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘
-                  |                                   |   |   |
-                Start Bit                             |  Stop Bits
-                                                      |
-                                                 Parity Bit
-                                 
-                                 Control Bits
-```
+![UART Frame Format](docs/images/uart-frame-format.svg)
+
 Depending on the config, the data is between 5 to 9 bits long.  
 The remaining config bits are a start bit that signals the receiver by a falling edge, that the data is coming in.  
 A stop bit that signals the end of the frame. Depending on the config there can also be two stop bits.  
@@ -485,3 +346,8 @@ Bit 1 is called DR (Data Ready). It tells that a byte is waiting in the receive 
 Reading this register does two things:  
 - Returns the received byte.  
 - Removes it from the UART's receive buffer.
+
+Polling is a technique where the CPU repeatedly checks a hardware device to see if it is ready, instead of the device notifying the CPU.  
+Imagine no one sends any data for 10 seconds.  
+During those 10 seconds, the CPU keeps checking the status of Line Status Reegister continuously.  
+This wastes CPU cycles.
