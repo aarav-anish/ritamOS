@@ -262,9 +262,7 @@ To set the divisor to the controller:
 - Send the most significant byte of the divisor value to [PORT + 1], i.e. interrupt register.
 - Clear the most significant bit of the Line Control Register.
 
-```ascii
-    Baudrate = 115200 / divisor
-```
+> Baudrate = 115200 / divisor
 
 ### UART Frame
 
@@ -351,3 +349,73 @@ Polling is a technique where the CPU repeatedly checks a hardware device to see 
 Imagine no one sends any data for 10 seconds.  
 During those 10 seconds, the CPU keeps checking the status of Line Status Reegister continuously.  
 This wastes CPU cycles.
+
+## Memory Protection
+
+Whenever a process is waiting for input and it has nothing to do. The process switches to another process instead of being idle.  
+To switch between processes is to give each process full access of memory.  
+If a process has idle time, its state is saved into memory and another process is loaded.  
+
+| Operation        | Real Time  | Scaled (1 ns = 1 sec) |
+| ---------------- | ---------- | --------------------- |
+| CPU instruction  | 0.3 ns     | 0.3 second            |
+| L1 cache read    | 1 ns       | 1 second              |
+| L2 cache read    | 10 ns      | 10 seconds            |
+| Main memory read | 100 ns     | 1 minute 40 seconds   |
+| SSD read         | 100 μs     | 1 day                 |
+| HDD seek         | 5 ms       | ~2 months             |
+| Cross-region network RTT | 80 ms | ~2.5 years         |
+
+However, saving a program state on disk is very slow.  
+So, it will be way better to leave the process in the memory while switching between them.
+
+This introduced another set of problems. One particular issue is of memory protection.
+We certainly do not want a process to read and write into another process's memory space.
+
+The solution at that time was base and bounds.  
+
+### Base and Bounds
+
+In base and bounds, there are two CPU registers: base register and bounds register.
+Both these registers together define the memory region.
+
+base: start of the process memory
+bound: size of the process memory
+
+Physical Memory:
+
+![Physical Memory](docs/images/physical-memory.svg)
+
+Each process thinks it starts at address 0.  
+The MMU (Memory Management Unit) of CPU adds base to produce the real physical address.  
+
+![Base Bounds MMU](/docs/images/base_bounds_mmu.svg)
+
+The program looks like below in memory:
+
+![Program Layout](/docs/images/program-layout.svg)
+
+There is some unused space between the heap and the stack for the program to grow.  
+But with base and bounds we have to store the entire program in one piece.  
+So, we have to reserve this space, even if we don't store anyting there.  
+It causes memory wastage.
+
+### Segmentation
+
+Segmentation is a memory management technique where memory is divided into variable-sized chunks called segments.  
+Each segment is defined by a base address and a limit (size).
+
+Segmentation on x86 is base-and-bounds, just applied per-segment instead of per-process.  
+The CPU has several segment registers.
+
+| Register | Purpose                 |
+| -------- | ----------------------- |
+| CS       | Code Segment            |
+| DS       | Data Segment            |
+| SS       | Stack Segment           |
+| ES       | Extra Segment           |
+| FS       | General-purpose segment |
+| GS       | General-purpose segment |
+
+The term **segmentation fault** comes from an illegal memory access on a segmented machine.  
+This term still persists even on machines where no segmentation is used.
