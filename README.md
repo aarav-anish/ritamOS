@@ -419,3 +419,171 @@ The CPU has several segment registers.
 
 The term **segmentation fault** comes from an illegal memory access on a segmented machine.  
 This term still persists even on machines where no segmentation is used.
+
+#### Physical Memory
+
+The memory that CPU addresses on its bus is called physical memory.   
+The physical memory is organized as a sequence of bytes.  
+Each byte is assigned a unique address called the physical address.  
+The physical address space in a 32-bit system ranges from 0 to (2^32 - 1) bytes.
+
+### Global Descriptor Table
+
+The GDT contains the description of the segments that we want to use.  
+Each entry within GDT is called segment descriptor.  
+The segment descriptor defines base address, size of the segment, access rights and flags.
+The segment descriptor is 8 bytes long. x86 is little endian.  
+Reference Document: [Combined Volume Set of Intel® 64 and IA-32 Architectures](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html#inpage-nav-1)
+
+![Segment Descriptor](docs/images/segment-descriptor.png)
+
+#### 1. Base Address
+
+Base Address is 32 bits long but Intel stores it in three pieces:
+```ascii
+Base =
+Base31:24
+Base23:16
+Base15:0
+
+If segment starts at 1MB, Base = 0x00100000
+Base31:24 = 0x00
+Base23:16 = 0x10
+Base15:0  = 0x0000
+```
+
+#### 2. Segment Limit
+
+The limit is the maximum offset allowed within the segment. It is 20 bits long.
+```ascii
+Limit =
+Limit19:16
+Limit15:0
+```
+
+#### 3. Access Byte
+
+The access byte determines what kind of segment this is.
+
+#### P (Present)
+
+If the CPU accesses a segment with P = 0, it raises a fault.
+```ascii
+1 = Segment exists
+0 = Not present
+```
+
+#### DPL (Descriptor Privilege Level)
+```ascii
+00 = Ring 0
+01 = Ring 1
+10 = Ring 2
+11 = Ring 3
+```
+Most operating systems only use
+Ring 0
+Ring 3
+
+#### S (Descriptor Type)
+```ascii
+0 = System descriptor
+1 = Code/Data descriptor
+```
+Examples of system descriptors: TSS, LDT, Call Gate  
+For ordinary code and data segments: S = 1
+
+#### Type
+
+The Type field is 4 bits wide (bits 3–0 of the Access Byte).  
+Its meaning depends on whether the descriptor is a code segment or a data segment (S = 1).
+Data segments are readable and code segments are executable.
+
+Data Segment Types:
+| Binary | Hex   | Expand Down | Writable | Accessed | Description                       |
+| ------ | ----- | ----------- | -------- | -------- | --------------------------------- |
+| `0000` | `0x0` | No          | No       | No       | Read-only                         |
+| `0001` | `0x1` | No          | No       | Yes      | Read-only, accessed               |
+| `0010` | `0x2` | No          | Yes      | No       | **Read/Write**                    |
+| `0011` | `0x3` | No          | Yes      | Yes      | Read/Write, accessed              |
+| `0100` | `0x4` | Yes         | No       | No       | Expand-down, read-only            |
+| `0101` | `0x5` | Yes         | No       | Yes      | Expand-down, read-only, accessed  |
+| `0110` | `0x6` | Yes         | Yes      | No       | Expand-down, read/write           |
+| `0111` | `0x7` | Yes         | Yes      | Yes      | Expand-down, read/write, accessed |
+
+Code Segment Types:
+| Binary | Hex   | Conforming | Readable | Accessed | Description                        |
+| ------ | ----- | ---------- | -------- | -------- | ---------------------------------- |
+| `1000` | `0x8` | No         | No       | No       | Execute-only                       |
+| `1001` | `0x9` | No         | No       | Yes      | Execute-only, accessed             |
+| `1010` | `0xA` | No         | Yes      | No       | **Execute/Read**                   |
+| `1011` | `0xB` | No         | Yes      | Yes      | Execute/Read, accessed             |
+| `1100` | `0xC` | Yes        | No       | No       | Conforming, execute-only           |
+| `1101` | `0xD` | Yes        | No       | Yes      | Conforming, execute-only, accessed |
+| `1110` | `0xE` | Yes        | Yes      | No       | Conforming, execute/read           |
+| `1111` | `0xF` | Yes        | Yes      | Yes      | Conforming, execute/read, accessed |
+
+
+#### 4. Flags
+
+#### G (Granularity)
+
+If G = 0, the segment size can range from 1 byte to 1 MByte, in byte increments.
+Limit is measured in bytes.
+```ascii
+Limit = 1000 means 1000 bytes
+```
+
+If G = 1, the segment size can range from 4 KByte to 4 GByte, in 4KByte increments.
+Limit is measured in 4 KB pages.
+```ascii
+Limit = 0xFFFFF means 0xFFFFF × 4096
+≈ 4 GB
+```
+
+This is why almost every OS sets G = 1.
+
+#### D/B
+
+For code segments:
+```ascii
+0 = 16-bit code
+1 = 32-bit code
+```
+
+For stack/data segments:
+```ascii
+0 = 16-bit stack
+1 = 32-bit stack
+```
+
+For our 32-bit OS:
+D = 1
+
+#### L
+
+64-bit code segment  
+Only used in x86-64.  
+For our 32-bit OS: L = 0
+
+#### AVL
+
+Intel leaves this bit for the operating system.  
+Most kernels simply set it to 0.    
+
+### Endianness
+
+Endianness describes the byte order in which multi-byte values are stored in memory.  
+There are two primary types of endianness:  
+Little-endian: The least significant byte (LSB) is stored first (lowest memory address).  
+Big-endian: The most significant byte (MSB) is stored first (lowest memory address).
+
+Common Little Endian Processors:
+- Intel x86/x64 processors
+- ARM (default mode)
+- AMD architectures
+
+Common Big Endian Processors:
+- IBM PowerPC
+- Motorola 68K
+- SPARC architectures
+- Network Byte Order (TCP/IP)
