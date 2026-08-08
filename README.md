@@ -33,10 +33,7 @@ And there are also ways to receive input.
 - The BIOS runs some tests and looks for a bootloader and transfers control to it.  
 - And the bootloader then looks for our kernel, loads it into memory and jumps to its entry point.  
 
-```mermaid
-flowchart LR
-    A["BIOS"] --> B["Bootloader"] --> C["Kernel"]
-```
+![Build Kernel](docs/images//build-kernel.svg)
 
 - To run a kernel we have to provide a bootloader and a kernel binary.  
 - We use GRUB as a bootloader. So we then pack GRUB and our kernel into a bootable ISO file.  
@@ -76,6 +73,39 @@ bochs -f bochsrc.txt
 ```
 qemu-system-i386 -cdrom ritamOS.iso
 ```
+
+### Start qemu and wait for GDB
+```
+qemu-system-i386 -cdrom ritamOS.iso -s -S
+```
+
+- -S: freezes the CPU immediately at startup.  
+      Qemu starts, but does not execute the first instruction until a debugger tells it to continue.  
+- -s: enables qemu's built-in GDB server on TCP port 1234. It is equivalent to:
+```
+-gdb tcp::1234
+```
+
+![Qemu GDB](docs/images/qemu-gdb.svg)
+
+Connect GDB from another terminal:
+```
+cd iso/boot
+gdb kernel.elf
+```
+
+Inside GDB:
+```
+target remote :1234      # Connect to qemu
+break gdt_init           # Set breakpoint at gdt_init function
+break *0x100000          # Break at address
+continue                 # Continue execution
+stepi 100                # Execute 100 instructions
+x/10i $eip               # Show next 10 instructions
+info registers           # GDB: show CPU registers
+monitor info registers   # QEMU: show CPU registers
+```
+This is useful for debugging RitamOS kernel at the instruction/register level.
 
 ## Setup the kernel stack
 
@@ -350,6 +380,17 @@ Imagine no one sends any data for 10 seconds.
 During those 10 seconds, the CPU keeps checking the status of Line Status Reegister continuously.  
 This wastes CPU cycles.
 
+#### Put serial output into a file
+```
+qemu-system-i386 -cdrom ritamOS.iso -serial file:com1.out
+```
+
+#### Read serial input from terminal or put serial output into terminal
+```
+qemu-system-i386 -cdrom ritamOS.iso -serial stdio
+``` 
+This command is bidirectional.
+
 ## Memory Protection
 
 Whenever a process is waiting for input and it has nothing to do. The process switches to another process instead of being idle.  
@@ -431,7 +472,7 @@ The physical address space in a 32-bit system ranges from 0 to (2^32 - 1) bytes.
 
 The GDT contains the description of the segments that we want to use.  
 Each entry within GDT is called segment descriptor.  
-The segment descriptor defines base address, size of the segment, access rights and flags.
+The segment descriptor defines base address, size of the segment, access rights and flags.  
 The segment descriptor is 8 bytes long. x86 is little endian.  
 Reference Document: [Combined Volume Set of Intel® 64 and IA-32 Architectures](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html#inpage-nav-1)
 
