@@ -12,7 +12,7 @@ ASFLAGS = -f elf32
 
 CFILES = $(foreach D, $(CODEDIRS), $(wildcard $(D)/*.c))
 
-OBJECTS = $(patsubst %.c, %.o, $(CFILES)) loader.o
+OBJECTS = $(patsubst %.c, %.o, $(CFILES)) loader.o lib/gdt_loader.o
 DEPFILES = $(patsubst %.c, %.d, $(CFILES))
 
 -include $(DEPFILES)

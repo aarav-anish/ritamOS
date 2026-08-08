@@ -628,3 +628,28 @@ Common Big Endian Processors:
 - Motorola 68K
 - SPARC architectures
 - Network Byte Order (TCP/IP)
+
+### GDTR
+
+The CPU doesn't know about the GDT yet.  
+The address and size of the GDT needs to be loaded into the GDTR register.
+
+![Global and Local Register Tables](docs/images/global-local-descriptor-tables.png)
+
+**GDT Limit:**
+
+The limit value of 0 results in exactly one valid byte.  
+Because segment descriptors are always 8 bit long,  
+the GDT limit should always be one less than an integral multiple of 8 (8N -1).
+
+The first descriptor in the GDT is not used by the processor.  
+A segment descriptor to this "null descriptor" does not generate an exception  
+when loaded into data segment registor (DS, FS, ES and GS),  
+but it always generates a general protection exception (#GP)  
+when an attempt is made to access the registor by the descriptor.  
+By initializing the segement registers with the segment selector,  
+accidental reference to unused registers can be guaranteed to generate an exception.
+
+**Load the GDT**
+The LGDT instruction is used to load the GDT.
+

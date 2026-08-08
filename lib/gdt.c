@@ -5,6 +5,7 @@
 #define GDT_NUM_ENTRIES 3
 
 static struct segment_descriptor gdt_table[GDT_NUM_ENTRIES];
+static struct gdtr gdtr;
 
 void set_segment_selector(uint16_t index, uint32_t base_address, uint32_t limit, uint8_t access, uint8_t flags)
 {
@@ -23,4 +24,16 @@ void set_segment_selector(uint16_t index, uint32_t base_address, uint32_t limit,
 
     // flags limit
     gdt_entry->flags_limit = (uint8_t)(((flags << 4) & 0xF0) | ((limit >> 16) & 0x0F));
+}
+
+void gdt_init()
+{
+    set_segment_selector(0, 0, 0, 0, 0);             // null descriptor
+    set_segment_selector(1, 0x0, 0xFFFF, 0x9A, 0xC); // code segment
+    set_segment_selector(2, 0x0, 0xFFFF, 0x92, 0xC); // data segment
+
+    gdtr.limit = (uint16_t)(sizeof(struct segment_descriptor) * GDT_NUM_ENTRIES) - 1;
+    gdtr.address = (uint32_t)gdt_table;
+
+    gdt_flush(&gdtr);
 }

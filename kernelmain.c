@@ -3,6 +3,7 @@
 #include "asm.h"
 #include "util_lib.h"
 #include "serial.h"
+#include "gdt.h"
 
 #define DELAY_SHORT 4000000U
 #define DELAY_MEDIUM 30000000U
@@ -74,13 +75,15 @@ int kernel_main()
 
     // serial_write_string(COM1_BASE_ADDR, message, strlen(message));
 
-    uint32_t position = 0;
-    while (1)
-    {
-        char input = serial_read(COM1_BASE_ADDR);
+    gdt_init();
 
-        write_letter_to_screen(input, position);
-        move_cursor(++position);
-    }
+    // uint32_t position = 0;
+    // while (1)
+    // {
+    //     char input = serial_read(COM1_BASE_ADDR);
+
+    //     write_letter_to_screen(input, position);
+    //     move_cursor(++position);
+    // }
     return 0;
 }
