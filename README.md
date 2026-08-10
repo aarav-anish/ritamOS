@@ -79,9 +79,9 @@ qemu-system-i386 -cdrom ritamOS.iso
 qemu-system-i386 -cdrom ritamOS.iso -s -S
 ```
 
-- -S: freezes the CPU immediately at startup.  
+- `-S`: freezes the CPU immediately at startup.  
       Qemu starts, but does not execute the first instruction until a debugger tells it to continue.  
-- -s: enables qemu's built-in GDB server on TCP port 1234. It is equivalent to:
+- `-s`: enables qemu's built-in GDB server on TCP port 1234. It is equivalent to:
 ```
 -gdb tcp::1234
 ```
@@ -225,8 +225,8 @@ UART Connection:
 
 ![UART Connection](docs/images/uart-connection.svg)
 
-GND - Both lines share a common ground. This serves as a way to provide a voltage reference point so that the signal levels can be interpreted correctly.  
-VCC - It carries a supply voltage which if used wrong, can fry the device.
+`GND` - Both lines share a common ground. This serves as a way to provide a voltage reference point so that the signal levels can be interpreted correctly.  
+`VCC` - It carries a supply voltage which if used wrong, can fry the device.
 
 To send data, we apply high voltage over some time and low voltage over some time.  
 
@@ -393,7 +393,8 @@ This command is bidirectional.
 
 ## Memory Protection
 
-Whenever a process is waiting for input and it has nothing to do. The process switches to another process instead of being idle.  
+Whenever a process is waiting for input and it has nothing to do.  
+The process switches to another process instead of being idle.  
 To switch between processes is to give each process full access of memory.  
 If a process has idle time, its state is saved into memory and another process is loaded.  
 
@@ -653,3 +654,92 @@ accidental reference to unused registers can be guaranteed to generate an except
 **Load the GDT**
 The LGDT instruction is used to load the GDT.
 
+## Mock Programs and GRUB Modules
+
+RitamOS does not have a complete process/executable-loading system yet.  
+To test GDT-based memory protection, I use two small C programs as mock processes:
+
+- `banking_program.c` — contains data that should be protected.
+- `evil_program.c` — tries to access the banking program's memory.
+
+They are not real OS processes.  
+They are simple programs used to test memory protection.
+
+```text
+Without protection:
+evil → banking memory → allowed
+
+With GDT protection:
+evil → banking memory → #GP (General Protection Fault)
+```
+
+### Building the Mock Programs
+
+The C programs are built separately from the kernel.
+
+![Build mock program](docs/images/build-mock-program.svg)
+
+The final .bin files contain the program's machine code and data and can be loaded directly into memory.  
+A linker script is used to control the addresses at which the programs are built.
+
+### GRUB Modules
+
+A GRUB Multiboot module is an additional file that GRUB loads into RAM along with the kernel.  
+GRUB does not execute the module. It simply loads it and provides the kernel with its memory location.
+
+```cfg
+menuentry "RitamOS" {
+    multiboot /boot/kernel.elf
+    module /boot/banking_program.bin banking_program
+    module /boot/evil_program.bin evil_program
+    boot
+}
+```
+
+After booting:  
+![Load mock program](docs/images/load-mock-program.svg)
+
+The kernel can then locate the module using the Multiboot information structure.
+```text
+mod_start → start address in RAM
+mod_end   → end address in RAM
+```
+So it knows where each program is located.
+
+### Why Use GRUB Modules?
+
+Normally, an OS needs an executable loader to load a program.  
+RitamOS does not have one yet.  
+GRUB modules provide a simple way to get standalone programs into RAM:
+
+![GRUB module](docs/images/grub-module.svg)
+
+This lets the GDT experiment be done without implementing a complete process/executable system first.
+
+### Memory Protection Test
+
+Initially, both programs can access the same memory.  
+It means evil program can read the secret data of banking program.
+
+Then separate GDT data segments are created:
+
+```text
+Banking segment
+    base  = banking memory
+    limit = banking memory size
+
+Evil segment
+    base  = evil memory
+    limit = evil memory size
+```
+
+When the evil program tries to access the banking program's memory,  
+the address falls outside its segment limit:
+
+![General Protection Fault](docs/images/general-protection-fault.svg)
+
+A GRUB module is not a process.  
+It is simply:
+> A file that GRUB loads into RAM and tells the kernel about.
+
+The mock programs use this mechanism to provide separate blocks of memory for testing GDT-based memory protection.
