@@ -450,14 +450,14 @@ Each segment is defined by a base address and a limit (size).
 Segmentation on x86 is base-and-bounds, just applied per-segment instead of per-process.  
 The CPU has several segment registers.
 
-| Register | Purpose                 |
-| -------- | ----------------------- |
-| CS       | Code Segment            |
-| DS       | Data Segment            |
-| SS       | Stack Segment           |
-| ES       | Extra Segment           |
-| FS       | General-purpose segment |
-| GS       | General-purpose segment |
+| Register | Name      | Purpose       |
+| -------- | --------- | -------------------------------------- |
+| CS   | Code Segment  | Selects the segment containing the instructions being executed |
+| DS   | Data Segment  | Default segment for most data accesses |
+| SS   | Stack Segment | Used for stack operations such as `push`, `pop`, `call`, and `ret` |
+| ES   | Extra Segment | Additional data segment; historically used for certain string/memory operations |
+| FS   | Extra Segment | Additional/general-purpose segment register; often used for special data structures |
+| GS  | Extra Segment | Additional/general-purpose segment register; often used for special data structures |
 
 The term **segmentation fault** comes from an illegal memory access on a segmented machine.  
 This term still persists even on machines where no segmentation is used.
@@ -653,6 +653,40 @@ accidental reference to unused registers can be guaranteed to generate an except
 
 **Load the GDT**
 The LGDT instruction is used to load the GDT.
+
+### Segment Selector
+
+To activate a segment we need to set the segment selector.  
+A segment selector is the value stored in an x86 segment register such as CS, DS, or SS.  
+It tells the CPU which segment descriptor in the GDT/LDT to use.
+
+If we want to access memory via a segment,  
+first the CPU uses the segment selector to locate the segment descriptor for the segment.  
+Then, the CPU examines the segment descriptor to get the base address, size, access rights etc.  
+Finally, it calculates the physical address from the base address and gives address if it's allowed.
+
+![Segment Selectors](docs/images/segment-selectors.svg)
+
+```text
+At offset 0 : null descriptor
+At offset 8 : code segment (covers entire memory space) 
+              execute and read within this segment if it is activated
+At offset 16: data segment (covers entire memory space)
+              read and write within this segment if it is activated
+
+Each descriptor is 8 bytes long and hence the offsets.
+```
+```
+GDT created
+   ↓
+GDTR loaded
+   ↓
+Load data selector → DS/ES/FS/GS/SS
+   ↓
+Far jump → load CS
+   ↓
+Segment selectors are active
+```
 
 ## Mock Programs and GRUB Modules
 

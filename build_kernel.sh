@@ -13,4 +13,4 @@ cp grub_modules/banking_program.bin iso/boot/banking_program.bin
 cp grub.cfg iso/boot/grub/grub.cfg
 grub-mkrescue -o ritamOS.iso iso -d /usr/lib/grub/i386-pc
 
-qemu-system-i386 -cdrom ritamOS.iso
+qemu-system-i386 -cdrom ritamOS.iso -s -S
