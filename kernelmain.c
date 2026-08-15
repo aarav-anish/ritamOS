@@ -4,6 +4,7 @@
 #include "util_lib.h"
 #include "serial.h"
 #include "gdt.h"
+#include "grub_mod.h"
 
 #define DELAY_SHORT 4000000U
 #define DELAY_MEDIUM 30000000U
@@ -62,7 +63,7 @@ void print_message(const char *message, const char *subtitle)
     wait(DELAY_LONG);
 }
 
-int kernel_main()
+int kernel_main(uint32_t magic, multiboot_info_t *mbi)
 {
     // style_cursor(DISABLE);
 
@@ -76,6 +77,15 @@ int kernel_main()
     // serial_write_string(COM1_BASE_ADDR, message, strlen(message));
 
     gdt_init();
+
+    multiboot_module_t *mods = (multiboot_module_t *)mbi->mods_addr;
+    multiboot_module_t *banking_mod = &mods[0];
+
+    uint32_t banking_prog_size = banking_mod->mod_end - banking_mod->mod_start;
+
+    memcpy((void *)0x400000, (void *)banking_mod->mod_start, banking_prog_size);
+
+    run_module(0x400000);
 
     // uint32_t position = 0;
     // while (1)
