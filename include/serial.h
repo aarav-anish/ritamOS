@@ -22,3 +22,5 @@ void serial_write(uint16_t com, uint8_t data);
 void serial_write_string(uint16_t com, const char *buf, uint32_t len);
 
 char serial_read(uint16_t com);
+
+void dump_memory_to_serial(uint32_t addr, uint32_t size, uint16_t com);

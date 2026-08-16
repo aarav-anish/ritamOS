@@ -80,12 +80,16 @@ int kernel_main(uint32_t magic, multiboot_info_t *mbi)
 
     multiboot_module_t *mods = (multiboot_module_t *)mbi->mods_addr;
     multiboot_module_t *banking_mod = &mods[0];
+    multiboot_module_t *evil_mod = &mods[1];
 
     uint32_t banking_prog_size = banking_mod->mod_end - banking_mod->mod_start;
+    uint32_t evil_prog_size = evil_mod->mod_end - evil_mod->mod_start;
 
     memcpy((void *)0x400000, (void *)banking_mod->mod_start, banking_prog_size);
-
     run_module(0x400000);
+    
+    memcpy((void *)0x500000, (void *)evil_mod->mod_start, evil_prog_size);
+    run_module(0x500000);
 
     // uint32_t position = 0;
     // while (1)

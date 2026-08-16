@@ -56,3 +56,13 @@ char serial_read(uint16_t com)
     }
     return inb(SERIAL_DATA_PORT(com));
 }
+
+void dump_memory_to_serial(uint32_t addr, uint32_t size, uint16_t com)
+{
+    uint8_t *memory = (uint8_t *)addr;
+
+    for (uint32_t i = 0; i < size; i++)
+    {
+        serial_write(com, memory[i]);
+    }
+}
