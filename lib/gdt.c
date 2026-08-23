@@ -2,7 +2,7 @@
 #include "io.h"
 #include "gdt.h"
 
-#define GDT_NUM_ENTRIES 3
+#define GDT_NUM_ENTRIES 5
 
 static struct segment_descriptor gdt_table[GDT_NUM_ENTRIES];
 static struct gdtr gdtr;
@@ -28,9 +28,11 @@ void set_segment_selector(uint16_t index, uint32_t base_address, uint32_t limit,
 
 void gdt_init()
 {
-    set_segment_selector(0, 0, 0, 0, 0);             // null descriptor
-    set_segment_selector(1, 0x0, 0xFFFF, 0x9A, 0xC); // code segment
-    set_segment_selector(2, 0x0, 0xFFFF, 0x92, 0xC); // data segment
+    set_segment_selector(0, 0, 0, 0, 0);                   // null descriptor
+    set_segment_selector(1, 0x0, 0xFFFF, 0x9A, 0xC);       // kernel code segment
+    set_segment_selector(2, 0x0, 0xFFFF, 0x92, 0xC);       // kernel data segment
+    set_segment_selector(3, 0x400000, 0xFFFFF, 0x92, 0x4); // banking data segment
+    set_segment_selector(4, 0x500000, 0xFFFFF, 0x92, 0x4); // evil data segment
 
     gdtr.limit = (uint16_t)(sizeof(struct segment_descriptor) * GDT_NUM_ENTRIES) - 1;
     gdtr.address = (uint32_t)gdt_table;

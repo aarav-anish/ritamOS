@@ -86,10 +86,38 @@ int kernel_main(uint32_t magic, multiboot_info_t *mbi)
     uint32_t evil_prog_size = evil_mod->mod_end - evil_mod->mod_start;
 
     memcpy((void *)0x400000, (void *)banking_mod->mod_start, banking_prog_size);
-    run_module(0x400000);
-    
     memcpy((void *)0x500000, (void *)evil_mod->mod_start, evil_prog_size);
+
+    // set segment register before banking program is run
+    __asm__ volatile(
+        "mov $0x18, %%ax\n"
+        "mov %%ax, %%ds\n"
+        "mov %%ax, %%es\n"
+        : : : "ax", "memory");
+
+    run_module(0x400000);
+
+    // reset segment register after banking program has ran
+    __asm__ volatile(
+        "mov $0x10, %%ax\n"
+        "mov %%ax, %%ds\n"
+        "mov %%ax, %%es\n"
+        : : : "ax", "memory");
+
+    // set segment register before evil program is run
+    __asm__ volatile(
+        "mov $0x20, %%ax\n"
+        "mov %%ax, %%ds\n"
+        "mov %%ax, %%es\n"
+        : : : "ax", "memory");
+
     run_module(0x500000);
+
+    // reset segment register after evil program has ran
+    __asm__ volatile(
+        "mov $0x10, %%ax\n"
+        "mov %%ax, %%ds\n"
+        "mov %%ax, %%es\n" : : : "ax", "memory");
 
     // uint32_t position = 0;
     // while (1)

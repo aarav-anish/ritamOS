@@ -721,15 +721,6 @@ A linker script is used to control the addresses at which the programs are built
 A GRUB Multiboot module is an additional file that GRUB loads into RAM along with the kernel.  
 GRUB does not execute the module. It simply loads it and provides the kernel with its memory location.
 
-```cfg
-menuentry "RitamOS" {
-    multiboot /boot/kernel.elf
-    module /boot/banking_program.bin banking_program
-    module /boot/evil_program.bin evil_program
-    boot
-}
-```
-
 After booting:  
 ![Load mock program](docs/images/load-mock-program.svg)
 
@@ -766,6 +757,8 @@ Evil segment
     base  = evil memory
     limit = evil memory size
 ```
+
+![Separate Module Data Segment](docs/images/separate-module-data-segment.svg)
 
 When the evil program tries to access the banking program's memory,  
 the address falls outside its segment limit:

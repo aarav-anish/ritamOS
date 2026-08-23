@@ -8,6 +8,8 @@ ata0:               enabled=1, ioaddr1=0x1f0, irq=14
 ata0-master:        type=cdrom, path=ritamOS.iso, status=inserted
 boot:               cdrom
 
+com1:               enabled=1, mode=file, dev=com1.out
+
 log:                bochslog.txt
 clock:              sync=realtime, time0=local
 
