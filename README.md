@@ -651,8 +651,7 @@ when an attempt is made to access the registor by the descriptor.
 By initializing the segement registers with the segment selector,  
 accidental reference to unused registers can be guaranteed to generate an exception.
 
-**Load the GDT**
-The LGDT instruction is used to load the GDT.
+**Load the GDT:** The LGDT instruction is used to load the GDT.
 
 ### Segment Selector
 
@@ -770,3 +769,32 @@ It is simply:
 > A file that GRUB loads into RAM and tells the kernel about.
 
 The mock programs use this mechanism to provide separate blocks of memory for testing GDT-based memory protection.
+
+## Interrupts
+
+Interrupts are a way of stopping the CPU from from what it's currently doing to give it a different task.  
+
+### Interrupt Controller 
+There is a pin in the CPU that can be used to trigger an interrupt.  
+Interrupt controller is able to send signals using that pin.  
+
+When we press a key on the keyboard, interrupt controller can recognize when a key is pressed or released.  
+It then sends the interrupt signal to the CPU.  
+After receiving an interrupt, CPU stops the current task and starts handling the keyboard input.  
+When CPU is done handling the keyboard input, it continues doing the previous task.  
+
+**Hardware interrupt:**  
+Keyboard interrupt is a hardwware interrupt, an interrupt triggered by some device.  
+
+**Exceptions:**  
+Exceptions are raised by the CPU itself.  
+Example - divide by zero or access a memory region that is not permissible.  
+They are a way to reover from unallowed operations.
+
+**Software Interrupt:**  
+Software interrupts are the interrupts that we can trigger ourselves.  
+These are mainly used for system calls.
+
+Reading from the keyboard without using the interrupt is no problem at all.  
+We only need one CPU instruction to read a key that was pressed on the keyboard.  
+And yet wtihout interrupts, we cannot get the keyboard input the way we want.
