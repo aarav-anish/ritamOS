@@ -63,21 +63,36 @@ void print_message(const char *message, const char *subtitle)
     wait(DELAY_LONG);
 }
 
-int kernel_main(uint32_t magic, multiboot_info_t *mbi)
+void welcome_animation()
 {
-    // style_cursor(DISABLE);
+    style_cursor(DISABLE);
 
-    // const char *message = "[ Welcome to RitamOS! ]";
-    // const char *subtitle = "* * *";
+    const char *message = "[ Welcome to RitamOS! ]";
+    const char *subtitle = "* * *";
 
-    // print_message(message, subtitle);
+    print_message(message, subtitle);
+}
 
-    setup_serial(COM1_BASE_ADDR);
+void send_serial_output()
+{
+    const char *message = "[ Welcome to RitamOS! ]";
+    serial_write_string(COM1_BASE_ADDR, message, strlen(message));
+}
 
-    // serial_write_string(COM1_BASE_ADDR, message, strlen(message));
+void read_serial_input()
+{
+    uint32_t position = 0;
+    while (1)
+    {
+        char input = serial_read(COM1_BASE_ADDR);
 
-    gdt_init();
+        write_letter_to_screen(input, position);
+        move_cursor(++position);
+    }
+}
 
+void init_modules(multiboot_info_t *mbi)
+{
     multiboot_module_t *mods = (multiboot_module_t *)mbi->mods_addr;
     multiboot_module_t *banking_mod = &mods[0];
     multiboot_module_t *evil_mod = &mods[1];
@@ -118,14 +133,20 @@ int kernel_main(uint32_t magic, multiboot_info_t *mbi)
         "mov $0x10, %%ax\n"
         "mov %%ax, %%ds\n"
         "mov %%ax, %%es\n" : : : "ax", "memory");
+}
 
-    // uint32_t position = 0;
-    // while (1)
-    // {
-    //     char input = serial_read(COM1_BASE_ADDR);
+int kernel_main(uint32_t magic, multiboot_info_t *mbi)
+{
+    // welcome_animation();
 
-    //     write_letter_to_screen(input, position);
-    //     move_cursor(++position);
-    // }
+    setup_serial(COM1_BASE_ADDR);
+
+    gdt_init();
+
+    init_modules(mbi);
+
+    // send_serial_output();
+    // read_serial_input();
+
     return 0;
 }
