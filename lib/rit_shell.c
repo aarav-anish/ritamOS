@@ -25,4 +25,16 @@ void draw_header()
 void rit_shell()
 {
     draw_header();
+
+    uint16_t CURSOR_POS = RS_COLS * 2 + 2;
+
+    while (1)
+    {
+        uint8_t scan_code = read_scan_code();
+        write_letter_to_screen(scan_code, CURSOR_POS);
+
+        CURSOR_POS++;
+        if (CURSOR_POS >= RS_ROWS * RS_COLS)
+            break;
+    }
 }

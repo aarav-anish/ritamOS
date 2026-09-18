@@ -798,3 +798,6 @@ These are mainly used for system calls.
 Reading from the keyboard without using the interrupt is no problem at all.  
 We only need one CPU instruction to read a key that was pressed on the keyboard.  
 And yet wtihout interrupts, we cannot get the keyboard input the way we want.
+
+To get keyboard input, we read data from the keyboard data port.
+It returns a scan code. Scan codes are basically values that indicate whether a specific key was pressed or released.

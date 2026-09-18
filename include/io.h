@@ -31,7 +31,16 @@
 #define COLOR_LIGHTBROWN 0x0E
 #define COLOR_WHITE 0x0F
 
-typedef enum {SMALL, BIG, ENABLE, DISABLE} CursorStyle;
+#define KEYBOARD_DATA_PORT 0x60
+#define KEYBOARD_STATUS_PORT 0x64
+
+typedef enum
+{
+    SMALL,
+    BIG,
+    ENABLE,
+    DISABLE
+} CursorStyle;
 
 void write_letter_to_framebuffer(uint8_t letter, uint16_t row, uint16_t col, uint8_t text_color, uint8_t bg_color);
 
@@ -46,3 +55,5 @@ void write_to_screen(const char *buf, uint16_t len);
 void print_byte(uint8_t *pbyte, uint32_t pos);
 
 void style_cursor(CursorStyle cstyle);
+
+uint8_t read_scan_code();

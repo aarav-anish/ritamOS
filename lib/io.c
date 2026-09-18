@@ -93,3 +93,8 @@ void style_cursor(CursorStyle cstyle)
     default:
     }
 }
+
+uint8_t read_scan_code()
+{
+    return inb(KEYBOARD_DATA_PORT);
+}
