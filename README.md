@@ -641,7 +641,7 @@ The address and size of the GDT needs to be loaded into the GDTR register.
 
 The limit value of 0 results in exactly one valid byte.  
 Because segment descriptors are always 8 bit long,  
-the GDT limit should always be one less than an integral multiple of 8 (8N -1).
+the GDT limit should always be one less than an integral multiple of 8 (8N - 1).
 
 The first descriptor in the GDT is not used by the processor.  
 A segment descriptor to this "null descriptor" does not generate an exception  
@@ -778,13 +778,18 @@ Interrupts are a way of stopping the CPU from from what it's currently doing to 
 There is a pin in the CPU that can be used to trigger an interrupt.  
 Interrupt controller is able to send signals using that pin.  
 
-When we press a key on the keyboard, interrupt controller can recognize when a key is pressed or released.  
-It then sends the interrupt signal to the CPU.  
-After receiving an interrupt, CPU stops the current task and starts handling the keyboard input.  
+**Keyboard Interrupt:** When we press a key on the keyboard, interrupt controller can recognize when a key is pressed or released.  
+Within the interrupt controller, keybard signals are associated with the interrupt number 1.  
+Interrupt controller then sends the interrupt signal to the CPU.  
+After receiving an interrupt, CPU stops the current task to check the interrupt number and takes a look at the IDT.  
+In the IDT, CPU finds the handler that needs to be executed and starts handling the keyboard input.  
 When CPU is done handling the keyboard input, it continues doing the previous task.  
 
+To get keyboard input, we read data from the keyboard data port.
+It returns a scan code. Scan codes are basically values that indicate whether a specific key was pressed or released.
+
 **Hardware interrupt:**  
-Keyboard interrupt is a hardwware interrupt, an interrupt triggered by some device.  
+Keyboard interrupt is a hardware interrupt, an interrupt triggered by some device.  
 
 **Exceptions:**  
 Exceptions are raised by the CPU itself.  
@@ -799,5 +804,37 @@ Reading from the keyboard without using the interrupt is no problem at all.
 We only need one CPU instruction to read a key that was pressed on the keyboard.  
 And yet wtihout interrupts, we cannot get the keyboard input the way we want.
 
-To get keyboard input, we read data from the keyboard data port.
-It returns a scan code. Scan codes are basically values that indicate whether a specific key was pressed or released.
+### Interrupt Descriptor Table
+
+IDT is basically a list and its entries is called gates.  
+Each entry or gate in the IDT describes an interrupt type and what should happen when the interrupt is triggered.  
+
+![Protected-Mode Exceptions and Interrupts](docs/images/protected-mode-exceptions-interrupts.png)
+
+There are three different gate types that we can write into an IDT.  
+
+**Trap Gate:** Trap gates can be interrupted themselves. When we trigger a trap gate, the handler that's executed can itself be interrupted by another interrupt. Trap gates are typically used for exceptions and system calls.
+
+**Interrupt Gate:** It tells the CPU where to jump when a hardware interrupt or software exception occurs, and crucially, how to treat the IF (interrupt flag) on entry. It cannot be interrupted. To avoid dealing with interrupts interrupting interrupts, ritamOS only uses Interrupt Gates.
+
+**Task Gate:** Rather than calling a handler, the CPU switches to an entirely different context.
+
+![IDT Gate Descriptors](docs/images/idt-gate-descriptors.png)
+
+The offset is the address of the handler, that needs to be executed when an interrupt is triggered.  
+
+For segment selector, we have to enter a code-segment.  
+
+Present bit: must be set, otherwise you get a triple fault / general protection fault.  
+
+DPL (Descriptor Privilege Level): gates with DPL = 3 can be invoked by user mode via int n;  
+DPL = 0 gates can only be triggered by the CPU itself (kernel mode).
+
+Like the GDT, the IDT is an array of 8-byte descriptors (in protected mode).  
+Unlike the GDT, the first entry of the IDT may contain a descriptor.  
+Because there are only 256 interrupt or exception vectors, the IDT need not contain more than 256 descriptors.  
+It can contain fewer than 256 descriptors, because descriptors are required only for the interrupt and exception vectors that may occur.  
+All empty descriptor slots in the IDT should have the present flag for the descriptor set to 0.  
+The limit value is expressed in bytes and is added to the base address to get the address of the last valid byte.  
+A limit value of 0 results in exactly 1 valid byte.  
+Because IDT entries are always eight bytes long, the limit should always be one less than an integral multiple of eight (that is, 8N – 1).
