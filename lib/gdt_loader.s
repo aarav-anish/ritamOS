@@ -5,7 +5,7 @@ global gdt_flush
 gdt_flush:
     mov eax, [esp+4]
 
-    lgdt[eax]
+    lgdt [eax]
 
     mov ax, 0x10    ; 0x10 is the selector for your GDT data-segment descriptor
     mov ds, ax

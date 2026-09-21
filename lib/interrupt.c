@@ -4,6 +4,7 @@
 #define IDT_NUM_ENTRIES 256
 
 static struct interrupt_descriptor idt_table[IDT_NUM_ENTRIES] __attribute__((aligned(8)));
+static struct idtr idtr;
 
 void set_segement_descriptor(uint8_t index, uint32_t handler, uint16_t segment_selector, uint8_t flags)
 {
@@ -14,4 +15,12 @@ void set_segement_descriptor(uint8_t index, uint32_t handler, uint16_t segment_s
     idt_entry->flags = (uint8_t)flags;
     idt_entry->reserved_and_zeros = (uint8_t)0x00000000;
     idt_entry->segment_selector = (uint16_t)segment_selector;
+}
+
+void idt_init()
+{
+    idtr.limit = (uint16_t)(sizeof(struct interrupt_descriptor) * IDT_NUM_ENTRIES) - 1;
+    idtr.address = (uint32_t)idt_table;
+
+    load_idt(&idtr);
 }

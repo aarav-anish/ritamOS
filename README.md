@@ -819,6 +819,8 @@ There are three different gate types that we can write into an IDT.
 
 **Task Gate:** Rather than calling a handler, the CPU switches to an entirely different context.
 
+### IDT Gate Descriptors
+
 ![IDT Gate Descriptors](docs/images/idt-gate-descriptors.png)
 
 The offset is the address of the handler, that needs to be executed when an interrupt is triggered.  
@@ -838,3 +840,19 @@ All empty descriptor slots in the IDT should have the present flag for the descr
 The limit value is expressed in bytes and is added to the base address to get the address of the last valid byte.  
 A limit value of 0 results in exactly 1 valid byte.  
 Because IDT entries are always eight bytes long, the limit should always be one less than an integral multiple of eight (that is, 8N – 1).
+
+### Loading the IDT
+
+![IDTR-register](docs/images/idtr-register.png)
+
+The LIDT instruction needs as an argument the address to a structure called IDTR register.  
+The IDTR register is a 48-bit value containing the address and the size of the IDT.  
+
+The LIDT instruction loads the IDTR register with the base address and limit held in a memory operand.  
+This instruction can be executed only when the CPL is 0.  
+It normally is used by the initialization code of an operating system when creating an IDT.  
+
+The SIDT instruction copies the base and limit value stored in IDTR to memory.  
+This instruction can be executed at any privilege level.  
+
+If a vector references a descriptor beyond the limit of the IDT, a general-protection exception (#GP) is generated.

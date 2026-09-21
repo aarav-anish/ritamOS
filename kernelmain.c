@@ -6,6 +6,7 @@
 #include "gdt.h"
 #include "grub_mod.h"
 #include "rit_shell.h"
+#include "interrupt.h"
 
 #define DELAY_SHORT 4000000U
 #define DELAY_MEDIUM 30000000U
@@ -143,6 +144,8 @@ int kernel_main(uint32_t magic, multiboot_info_t *mbi)
     setup_serial(COM1_BASE_ADDR);
 
     gdt_init();
+
+    idt_init();
 
     rit_shell();
 
